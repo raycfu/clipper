@@ -1,16 +1,22 @@
-# GTA 6 Clipper (Claude skill)
+# GTA 6 Clipper
 
-Turns long GTA 6 streams into ready-to-post vertical clips. You give Claude a stream link (or ask it to find today's biggest streams), and it finds the best moments, cuts them to 9:16 with the face cam on top and the gameplay underneath, adds a hook and word-by-word captions, and opens one page where you watch, copy and post.
+A free [Claude Code](https://claude.com/claude-code) skill that turns long GTA 6 streams into ready-to-post vertical clips.
 
-Made by Ray Fu ([@raycfu](https://www.instagram.com/raycfu)). Full walkthrough on YouTube, and more free skills and guides in the Skool community: https://skool.com/raycfu
+Give Claude a stream link, or ask it to find today's biggest GTA 6 streams. It listens to the whole stream, picks the best moments with a harsh filter, and cuts 9:16 clips with the streamer's face cam on top, the gameplay underneath, a hook and word-by-word captions. Then it opens one page where you watch, copy the caption and post.
+
+In testing, an hour-long stream turned into 3 ready-to-post clips in about 13 minutes on a MacBook.
+
+![The pipeline: find, listen, pick, cut, post](docs/pipeline.png)
+
+Made by Ray Fu ([@raycfu](https://www.instagram.com/raycfu)). The full walkthrough is on YouTube, and more free skills and guides are in the Skool community: https://skool.com/raycfu
 
 ## What you need
 
-- A Mac or Linux computer (on Windows, use WSL)
-- [Claude Code](https://claude.com/claude-code), which comes with the Claude Pro plan ($20/month)
-- About 3 GB of free space for the tools and speech models, plus room for the streams you clip
+- A Mac or Linux computer. On Windows, run Claude Code inside [WSL](https://learn.microsoft.com/windows/wsl/install).
+- [Claude Code](https://claude.com/claude-code), which comes with the Claude Pro plan ($20/month).
+- About 3 GB of free space for the tools and speech models, plus room for the streams you clip (a few hundred MB each).
 
-Everything else is free and installs itself the first time: yt-dlp, ffmpeg, Whisper (speech to text that runs on your own computer) and a caption font. Nothing gets installed system-wide; it all lives in `~/.gta6-clipper`.
+Everything else is free and installs itself the first time: yt-dlp, ffmpeg, Whisper (speech to text that runs on your own computer), deno and a caption font. Nothing is installed system-wide. It all lives in `~/.gta6-clipper`.
 
 ## Install
 
@@ -18,55 +24,94 @@ Everything else is free and installs itself the first time: yt-dlp, ffmpeg, Whis
 git clone https://github.com/raycfu/clipper ~/.claude/skills/gta6-clipper
 ```
 
-Or download the folder and drag it into `~/.claude/skills/`. Then open Claude Code and say:
+No git? Click **Code → Download ZIP** above, unzip it, rename the folder to `gta6-clipper` and move it into `~/.claude/skills/`. On a Mac that folder is hidden: in Finder press `Cmd + Shift + G`, paste `~/.claude/skills/` and press Enter.
+
+Then open Claude Code (in the terminal, or the Code tab of the Claude desktop app) and say:
 
 > set up the GTA clipper
 
-Setup takes about 5 minutes the first time and ends with `READY`.
+Setup takes about 5 minutes the first time and ends with `READY`. Allow the commands when Claude asks.
 
 ## Use it
 
 Say one of these to Claude:
 
-- `clip this stream: <YouTube, Twitch or Kick link>`
-- `find me today's biggest GTA 6 streams and clip them`
-- `look at what's working` (after a week of posting, with your YouTube channel link)
+| Say | What happens |
+|---|---|
+| `clip this stream: <link>` | Clips a finished YouTube, Twitch or Kick stream |
+| `find me today's biggest GTA 6 streams and clip them` | Finds the most viewed GTA 6 streams first, then clips them |
+| `make the hook for clip 2 shorter` | Changes one clip and re-renders only that one |
+| `clip 3 starts slow, start it 4 seconds later` | Re-cuts one clip |
+| `look at what's working` | Weekly report from your posted Shorts' views (give it your channel link) |
 
-Claude will show you a table of the moments it kept and the ones it cut, render the clips, and open the gallery page. Your clips are saved in `~/GTA6 Clipper/runs/<date>/clips/`.
+Claude shows you a table of the moments it kept and the ones it cut, with a reason for each, then renders the clips and opens the gallery page. Clips are saved in `~/GTA6 Clipper/runs/<date>/clips/`.
 
 ## How it works
 
-1. **Find**: searches YouTube for the most viewed GTA 6 streams (live streams are skipped until the recording is up).
-2. **Listen**: downloads only the audio, then builds a hype curve from how loud the streamer gets, YouTube's "most replayed" graph and, on YouTube stream recordings, how fast chat is moving. It transcribes the 25 hottest spots with Whisper on your computer.
+1. **Find**: searches YouTube for the most viewed GTA 6 streams. Streams that are still live are skipped until the recording is up.
+2. **Listen**: downloads only the audio, then builds a hype curve from how loud the streamer gets, YouTube's "most replayed" graph and, on YouTube stream recordings with chat replay, how fast chat is moving. It transcribes the 25 hottest spots with Whisper on your computer.
 3. **Pick**: Claude scores every moment with three questions. Would a stranger stop scrolling in two seconds? Does it make sense with zero context? Does it pay off inside the clip? One no and it's cut.
-4. **Cut**: downloads only the minutes it needs and builds a 1080x1920 clip: face cam on top, gameplay underneath, a hook for the first 3 seconds, word-by-word captions, and audio at Shorts loudness. Every clip gets checked for length, a black face cam and missing captions.
+4. **Cut**: downloads only the minutes each clip needs and builds a 1080x1920 video: face cam on top, gameplay underneath, a hook for the first 3 seconds, word-by-word captions and audio at Shorts loudness. Claude checks three frames of every clip and trims around any layout switch in the stream, and every clip is checked for length, a black face cam and missing captions.
 5. **Post**: one page with every clip, a title, caption and hashtags with copy buttons, and a link to the exact second in the original stream so you can credit it. Nothing is ever posted for you.
 
-Every week, `look at what's working` reads the public views on your Shorts, matches them to the clips the skill made, and updates `~/GTA6 Clipper/preferences.md` so the picks lean toward what your audience watches.
+Every week, `look at what's working` reads the public views on your Shorts, matches them to the clips the skill made, and updates `~/GTA6 Clipper/preferences.md`, so the picks lean toward what your audience actually watches. It needs about 10 posted Shorts, and it only matches Shorts whose title still contains the clip's title or hook.
 
 ## Before you post
 
 - Watch every clip first.
-- Add something of your own (your hook, your take, a reaction). Channels of raw reposted clips get turned down for monetization.
+- Add something of your own: your hook, your take or a reaction. Channels of raw reposted clips get turned down for monetization.
 - Credit the streamer, follow the clipping campaign's rules, and don't post the same clip twice on one account.
 - Only clip streams you're allowed to clip. You're responsible for what you post.
 
+## Update
+
+```bash
+cd ~/.claude/skills/gta6-clipper && git pull
+```
+
+Then say "set up the GTA clipper" again. It takes a few seconds and also updates the downloader, which fixes most YouTube download errors.
+
+## Uninstall
+
+```bash
+rm -rf ~/.claude/skills/gta6-clipper ~/.gta6-clipper
+```
+
+Your clips stay in `~/GTA6 Clipper` until you delete that folder too.
+
 ## Troubleshooting
 
-- **"Sign in to confirm you're not a bot" from YouTube**: run `export GTA6_COOKIES_BROWSER=chrome` (or `safari` / `firefox`) and try again, or say "set up the GTA clipper" again to update the downloader.
+- **"Sign in to confirm you're not a bot" or a 403 error**: say "set up the GTA clipper" again to update the downloader. If it still fails, run `export GTA6_COOKIES_BROWSER=chrome` (or `safari` / `firefox`, whichever browser you're signed into YouTube with) and try again.
+- **"This video is age-restricted"**: same fix, `export GTA6_COOKIES_BROWSER=chrome`.
 - **"This stream is still live"**: wait until the stream ends and the recording is up.
-- **No chat signal**: chat speed only works on YouTube recordings of live streams. Twitch and Kick use loudness only.
-- **Slow transcribing**: ask Claude to use the `base` model or fewer candidates (`--top 15`).
+- **No chat signal**: chat speed only works on YouTube recordings of live streams that kept chat replay on. Twitch and Kick use loudness only, which still works well.
+- **A caption is wrong**: ask Claude to re-render that clip with the `medium` model.
+- **Transcribing is slow**: ask Claude to use the `base` model or fewer candidates (`--top 15`).
+- **Something else**: [open an issue](https://github.com/raycfu/clipper/issues) with the last lines Claude showed you.
+
+## FAQ
+
+**Does it cost anything besides Claude Pro?** No. Every tool it uses is free and runs on your computer.
+
+**Does it work for games other than GTA 6?** Yes. Nothing in it is GTA-specific except the stream search. Paste any stream or long video link.
+
+**Does it upload anything?** No. It never posts, and your clips never leave your computer until you post them.
+
+**Windows?** Use WSL. Native Windows isn't supported, because the setup script needs bash.
 
 ## Files
 
 ```
-SKILL.md              instructions Claude follows
-scripts/setup.sh      one-time install into ~/.gta6-clipper
+SKILL.md                  the instructions Claude follows
+scripts/setup.sh          one-time install into ~/.gta6-clipper
 scripts/find_streams.py   find the biggest GTA 6 streams
-scripts/analyze.py    audio, hype curve, transcripts of the hot spots
-scripts/cut.py        download only the needed minutes, render vertical clips
-scripts/gallery.py    the page you post from
-scripts/learn.py      weekly "look at what's working" report
-scripts/common.py     shared helpers
+scripts/analyze.py        audio, hype curve, transcripts of the hot spots
+scripts/cut.py            download only the needed minutes, render vertical clips
+scripts/gallery.py        the page you post from
+scripts/learn.py          weekly "look at what's working" report
+scripts/common.py         shared helpers
 ```
+
+## License
+
+MIT. See [LICENSE](LICENSE).

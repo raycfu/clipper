@@ -7,13 +7,16 @@ import shutil
 import subprocess
 import sys
 
+# Keep Whisper's engine (ctranslate2) from printing its own tips and warnings.
+os.environ.setdefault("CT2_VERBOSE", "-1")
+
 HOME_DIR = pathlib.Path.home() / ".gta6-clipper"
 WORK = pathlib.Path(os.environ.get("GTA6_CLIPPER_DIR", pathlib.Path.home() / "GTA6 Clipper"))
 
 # Make deno (YouTube JS challenges) and uv visible to yt-dlp.
 os.environ["PATH"] = os.pathsep.join(
     # ~/.gta6-clipper/bin holds our ffmpeg; yt-dlp's partial (clip-only) downloads look for it on PATH
-    [str(HOME_DIR / "bin"), str(pathlib.Path.home() / ".deno" / "bin"), str(pathlib.Path.home() / ".local" / "bin"),
+    [str(HOME_DIR / "bin"), str(HOME_DIR / "venv" / "bin"), str(pathlib.Path.home() / ".deno" / "bin"), str(pathlib.Path.home() / ".local" / "bin"),
      os.environ.get("PATH", "")]
 )
 
@@ -94,13 +97,13 @@ def load(path, default=None):
     path = pathlib.Path(path)
     if not path.exists():
         return default
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def save(path, data):
     path = pathlib.Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def stream_dir(video_id):
@@ -144,4 +147,5 @@ def explain_download_error(e):
         return "This video is private or members-only, so it can't be clipped. Pick a different stream."
     if "unavailable" in low or "removed" in low or "does not exist" in low:
         return "This video isn't available anymore (removed, blocked in your country, or a wrong link)."
-    return "Download failed: " + msg.splitlines()[0][:300]
+    first = re.sub(r"^ERROR:\s*(\[[^\]]+\]\s*)?", "", msg.splitlines()[0] if msg else "")
+    return "Download failed: " + first[:300]

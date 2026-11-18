@@ -29,8 +29,11 @@ def main():
         tags = " ".join(c.get("hashtags") or [])
         post = (c.get("caption") or "").strip() + ("\n\n" + tags if tags else "")
         src = c.get("url", "")
+        t = int(c.get("start_s", 0))
         if "youtube.com" in src or "youtu.be" in src:
-            src += ("&" if "?" in src else "?") + f"t={int(c.get('start_s', 0))}s"
+            src += ("&" if "?" in src else "?") + f"t={t}s"
+        elif "twitch.tv" in src:
+            src += ("&" if "?" in src else "?") + f"t={t // 3600}h{t % 3600 // 60}m{t % 60}s"
         ok = c.get("qc") == "ok"
         cards.append(f"""
 <div class="card">
@@ -74,12 +77,15 @@ button,a{{background:#2a2a35;color:var(--fg);border:0;border-radius:10px;padding
 <script>function cp(b,t){{navigator.clipboard.writeText(t).then(()=>{{const o=b.textContent;b.textContent='Copied';setTimeout(()=>b.textContent=o,1200)}})}}</script>
 </body></html>"""
     out = os.path.join(run_dir, "index.html")
-    with open(out, "w") as fh:
+    with open(out, "w", encoding="utf-8") as fh:
         fh.write(page)
     print(f"Gallery: {out}")
     if not a.no_open:
         opener = "open" if sys.platform == "darwin" else ("start" if os.name == "nt" else "xdg-open")
-        subprocess.run([opener, out], shell=(os.name == "nt"), check=False)
+        try:
+            subprocess.run([opener, out], shell=(os.name == "nt"), check=False)
+        except OSError:
+            print("Open that file in your browser to see the clips.")
 
 
 if __name__ == "__main__":

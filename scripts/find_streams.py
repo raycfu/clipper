@@ -9,7 +9,7 @@ import urllib.parse
 
 import yt_dlp
 
-from common import WORK, hms, save, ydl_opts
+from common import WORK, explain_download_error, hms, save, ydl_opts
 
 # YouTube search filter codes: upload date
 WHEN = {"hour": "EgIIAQ%3D%3D", "today": "EgIIAg%3D%3D", "week": "EgIIAw%3D%3D", "month": "EgIIBA%3D%3D"}
@@ -25,8 +25,11 @@ def main():
     a = ap.parse_args()
 
     url = "https://www.youtube.com/results?search_query=" + urllib.parse.quote_plus(a.query) + "&sp=" + WHEN[a.when]
-    with yt_dlp.YoutubeDL(ydl_opts(extract_flat="in_playlist", playlistend=60)) as ydl:
-        info = ydl.extract_info(url, download=False)
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts(extract_flat="in_playlist", playlistend=60)) as ydl:
+            info = ydl.extract_info(url, download=False)
+    except yt_dlp.utils.DownloadError as e:
+        raise SystemExit(explain_download_error(e))
 
     rows, seen = [], set()
     for e in info.get("entries") or []:

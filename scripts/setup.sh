@@ -29,9 +29,10 @@ ln -sf "$FF" "$HOME_DIR/bin/ffmpeg"
 echo "    ok"
 
 echo "==> 4/5 JavaScript runtime for YouTube downloads (deno)"
-if ! command -v deno >/dev/null 2>&1; then
-  curl -fsSL https://deno.land/install.sh | sh -s -- -y --no-modify-path >/dev/null 2>&1 \
-    || echo "    deno install failed; YouTube may still work without it"
+if ! command -v deno >/dev/null 2>&1 && [ ! -x "$HOME_DIR/venv/bin/deno" ]; then
+  uv pip install --python "$HOME_DIR/venv/bin/python" -q deno >/dev/null 2>&1 \
+    || curl -fsSL https://deno.land/install.sh | sh -s -- -y --no-modify-path >/dev/null 2>&1 \
+    || echo "    deno install failed; YouTube downloads may fail. Install deno from deno.com and run setup again."
 fi
 echo "    ok"
 
@@ -55,5 +56,6 @@ echo "    ok"
 echo "==> Self-test"
 "$HOME_DIR/venv/bin/python" -c "import yt_dlp, faster_whisper, PIL, numpy; print('    python packages ok, yt-dlp', yt_dlp.version.__version__)"
 "$HOME_DIR/bin/ffmpeg" -hide_banner -version | head -1 | sed 's/^/    /'
-if "$HOME_DIR/bin/ffmpeg" -hide_banner -encoders 2>/dev/null | grep -q libx264; then echo "    h264 encoder ok"; else echo "    libx264 missing, will use Apple VideoToolbox"; fi
+if command -v deno >/dev/null 2>&1 || [ -x "$HOME_DIR/venv/bin/deno" ] || [ -x "$HOME/.deno/bin/deno" ]; then echo "    deno ok"; else echo "    WARNING: deno missing, YouTube downloads may fail"; fi
+if "$HOME_DIR/bin/ffmpeg" -hide_banner -encoders 2>/dev/null | grep -q libx264; then echo "    h264 encoder ok"; else echo "    libx264 missing, will use the built-in encoder"; fi
 echo "READY: GTA 6 Clipper is set up."

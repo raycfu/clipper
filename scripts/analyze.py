@@ -219,6 +219,8 @@ def main():
 
     print("==> Measuring loudness every second")
     loud = loudness_per_second(audio)
+    if len(loud) < 5:
+        sys.exit(f"The audio file looks empty or broken. Delete {d} and run this again.")
     if not duration:
         duration = float(len(loud))
         meta["duration"] = duration
@@ -304,7 +306,7 @@ def main():
             if not c["segments"]:
                 lines.append("(no speech: could be a pure gameplay or scream moment)")
             lines.append("")
-    (d / "for_claude.md").write_text("\n".join(lines))
+    (d / "for_claude.md").write_text("\n".join(lines), encoding="utf-8")
 
     print(f"\nDONE in {(time.time() - t0) / 60:.1f} min")
     print(f"Stream folder: {d}")

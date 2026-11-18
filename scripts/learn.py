@@ -14,7 +14,7 @@ from collections import defaultdict
 
 import yt_dlp
 
-from common import WORK, ydl_opts
+from common import WORK, explain_download_error, ydl_opts
 
 
 def norm(s):
@@ -30,11 +30,29 @@ def main():
     log_path = WORK / "log.csv"
     if not log_path.exists():
         raise SystemExit("No log.csv yet. Make and post some clips first.")
-    made = list(csv.DictReader(open(log_path, newline="")))
+    with open(log_path, newline="", encoding="utf-8") as fh:
+        made = list(csv.DictReader(fh))
 
-    url = a.channel.rstrip("/") + "/shorts"
-    with yt_dlp.YoutubeDL(ydl_opts(extract_flat="in_playlist", playlistend=a.limit)) as ydl:
-        info = ydl.extract_info(url, download=False)
+    ch = a.channel.strip().rstrip("/")
+    if ch.startswith("@"):
+        ch = "https://www.youtube.com/" + ch
+    elif "://" not in ch:
+        ch = "https://" + ch
+    for tab in ("/shorts", "/videos", "/featured", "/streams"):
+        if ch.endswith(tab):
+            ch = ch[: -len(tab)]
+    url = ch + "/shorts"
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts(extract_flat="in_playlist", playlistend=a.limit)) as ydl:
+            info = ydl.extract_info(url, download=False)
+    except yt_dlp.utils.DownloadError as e:
+        low = str(e).lower()
+        if "does not have a shorts tab" in low:
+            raise SystemExit("That channel has no Shorts yet. Post a few clips first, then run this again.")
+        if "404" in low or "does not exist" in low:
+            raise SystemExit(f"Couldn't find a YouTube channel at {ch}. Use your channel link, "
+                             "e.g. https://www.youtube.com/@yourhandle")
+        raise SystemExit(explain_download_error(e))
     posted = [e for e in (info.get("entries") or []) if e and e.get("title")]
     if not posted:
         raise SystemExit("Couldn't read any Shorts from that channel.")
@@ -87,7 +105,7 @@ def main():
     out += [f"- {m['views']:,} views | {m.get('moment_type')} | {m.get('streamer')} | hook: {m.get('hook')}" for m in ranked[-5:]]
 
     report = "\n".join(out)
-    (WORK / "learn_report.md").write_text(report)
+    (WORK / "learn_report.md").write_text(report, encoding="utf-8")
     print(report)
     print(f"\nSaved to {WORK / 'learn_report.md'}. Claude: update {WORK / 'preferences.md'} from this.")
 
