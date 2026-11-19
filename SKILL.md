@@ -1,33 +1,33 @@
 ---
-name: gta6-clipper
-description: Turns long GTA 6 streams (YouTube, Twitch or Kick) into ready-to-post vertical clips. It finds the biggest streams, downloads only the audio, builds a hype curve from loudness, YouTube's most-replayed graph and chat speed, transcribes the hot moments locally with Whisper, picks the best moments with a harsh filter, then cuts 9:16 clips with the face cam on top, gameplay underneath, a 3-second hook and word-by-word captions, plus a gallery page with captions and hashtags. Use it when the user says "set up the GTA clipper", "clip this stream", "find me today's biggest GTA 6 streams and clip them", "look at what's working", or asks to make Shorts/TikToks/Reels from a GTA (or any gaming) stream.
+name: clipper
+description: Turns any long stream, podcast or video (YouTube, Twitch or Kick) into ready-to-post vertical clips. Works for GTA 6 and any other game, IRL and Just Chatting streams, podcasts and interviews. It finds the biggest streams on any topic, downloads only the audio, builds a hype curve from loudness, YouTube's most-replayed graph and chat speed, transcribes the hot moments locally with Whisper, picks the best moments with a harsh filter, then cuts 9:16 clips with the face cam on top and the main video underneath (or one full-frame crop when there's no face cam), a 3-second hook and word-by-word captions, plus a gallery page with captions and hashtags. Use it when the user says "set up the clipper" (or "set up the GTA clipper"), "clip this stream", "clip this podcast", "find me today's biggest <topic> streams and clip them", "look at what's working", or asks to make Shorts/TikToks/Reels from any stream, podcast or long video.
 ---
 
-# GTA 6 Clipper
+# Clipper
 
-You turn a 4-hour stream into a handful of clips worth posting. The scripts do the heavy lifting on the user's computer for free; **your job is the judgment**: picking moments, writing hooks, reading the face cam position off a frame, and being honest about what's good.
+You turn a 4-hour stream, a 2-hour podcast or any long video into a handful of clips worth posting. GTA 6 is the headline use case, but nothing here is tied to one game or one kind of video. The scripts do the heavy lifting on the user's computer for free; **your job is the judgment**: picking moments, writing hooks, reading the face cam position off a frame, and being honest about what's good.
 
 Paths used below:
 - `SKILL` = this skill's folder (the folder this file is in)
-- `PY` = `~/.gta6-clipper/venv/bin/python`
-- `WORK` = `~/GTA6 Clipper` (every stream, run and clip lives here)
+- `PY` = `~/.clipper/venv/bin/python`
+- `WORK` = `~/Clipper` (every stream, run and clip lives here)
 
 Always run scripts as `cd "$SKILL/scripts" && "$PY" <script>.py ...`.
 
-## 0. Setup ("set up the GTA clipper")
+## 0. Setup ("set up the clipper")
 
-1. Run `bash "$SKILL/scripts/setup.sh"`. It installs uv, Python 3.12, yt-dlp, faster-whisper, ffmpeg and Pillow into `~/.gta6-clipper` only, plus the free Whisper models. First run takes a few minutes; later runs are instant.
+1. Run `bash "$SKILL/scripts/setup.sh"`. It installs uv, Python 3.12, yt-dlp, faster-whisper, ffmpeg and Pillow into `~/.clipper` only, plus the free Whisper models. First run takes a few minutes; later runs are instant.
 2. It ends with `READY`. If it fails, show the user the last lines and fix the cause (usually no internet, or the user declined an install).
 3. Create `WORK/preferences.md` if it doesn't exist, with the default rules from section 3 under a heading "My clip rules". This is the file the weekly review updates.
-4. Tell the user it's ready and the two things they can say next: "clip this stream: <link>" or "find me today's biggest GTA 6 streams and clip them".
+4. Tell the user it's ready and the two things they can say next: "clip this stream: <link>" (any stream, podcast or long video) or "find me today's biggest <topic> streams and clip them" (for example GTA 6, Minecraft, a streamer's name or "podcast").
 
 If `PY` doesn't exist when the user asks for anything else, run setup first.
 
 ## 1. Find streams (optional)
 
-`"$PY" find_streams.py [--query "GTA 6 stream"] [--when today|week] [--max 8]`
+`"$PY" find_streams.py --query "<topic> stream" [--when today|week|month] [--max 8] [--min-minutes 45]`
 
-Lists the most viewed GTA 6 streams with their length. Pick the top 2 or 3 unless the user names streamers. Long VODs (2h+) from big streamers are best. Streams that are live right now are skipped by default; clip them once the VOD is up (on YouTube that's usually right after the stream ends).
+Lists the most viewed long streams or videos for whatever the user asks about, with their length. Build the query from their words: "GTA 6 stream", "Fortnite stream", "Kai Cenat stream", "podcast full episode". If they don't name a topic, ask for one in one line. For podcasts use `--min-minutes 30`. Pick the top 2 or 3 unless the user names streamers. Long VODs (2h+) from big streamers are best. Streams that are live right now are skipped by default; clip them once the VOD is up (on YouTube that's usually right after the stream ends).
 
 ## 2. Listen (one stream at a time)
 
@@ -51,7 +51,9 @@ For each candidate, decide KEEP or CUT. **A clip is KEEP only if all three are y
 
 Also cut: anything that opens with filler ("uh, so yeah", "okay so"), long silent stretches, the streamer reading donations, sponsor reads, ads, music-only stretches (copyright claims), anything sexual, hateful or targeting a real person, and anything that only works as audio-off gameplay with no reaction. Never pick the same moment twice. Big laughter or screaming with no speech can still be a KEEP if the hype score is high and the window around it explains itself.
 
-Moment types to label: `first-reaction`, `freak-out`, `discovery`, `funny-fail`, `hot-take`, `skill-moment`, `rage`, `wholesome`, `glitch`.
+Moment types to label: `first-reaction`, `freak-out`, `discovery`, `funny-fail`, `hot-take`, `skill-moment`, `rage`, `wholesome`, `glitch`, and for talk content (podcasts, interviews, Just Chatting) `story`, `advice`, `confession`, `argument`.
+
+For talk content the clip lives in the words, so the first line has to be the hook (a bold claim, a number, a question), and the clip has to finish the thought. Cut anything that needs the question asked five minutes earlier.
 
 Score every KEEP 1 to 10 for how hard it would stop a scroll. Keep only 7+. Aim for about 3 per stream, never pad with weak ones. If a stream has nothing good, say so; that's useful information, not a failure.
 
@@ -86,13 +88,13 @@ Before writing the file, show the user a short table (time, streamer, type, scor
 ## 4. Cut
 
 1. `"$PY" cut.py download` downloads only the minutes each pick needs (plus 1.5 seconds on each side), saves three frames per clip in `<run>/frames/` (`<key>_a.jpg` near the start, `_b` in the middle, `_c` near the end), and prints the run folder.
-2. **Look at all three frames of every clip** (open them with your Read tool). Streams often switch layouts (a full-screen camera, a BRB screen, a menu), so check the face cam is in the same place in all three. If the layout changes inside the clip, open `<key>_sheet.jpg` (one frame every 2 seconds, left to right, top to bottom, starting at the clip's start time) to see exactly when it switches, then change that pick's `start`/`end` in `<run>/picks.json` so the whole clip uses one layout and re-download just that pick into the same run: `"$PY" cut.py download --run "<run>" --only 03`. Only use `facecam: null` when the whole clip is a full-screen camera or gameplay with no face cam. Then fill in `<run>/layout.json` for each key:
+2. **Look at all three frames of every clip** (open them with your Read tool). Streams and podcasts often switch layouts (a full-screen camera, a BRB screen, a menu, a cut between two podcast cameras), so check the face cam is in the same place in all three. If the layout changes inside the clip, open `<key>_sheet.jpg` (one frame every 2 seconds, left to right, top to bottom, starting at the clip's start time) to see exactly when it switches, then change that pick's `start`/`end` in `<run>/picks.json` so the whole clip uses one layout and re-download just that pick into the same run: `"$PY" cut.py download --run "<run>" --only 03`. Only use `facecam: null` when the whole clip is a full-screen camera or gameplay with no face cam. Most podcasts and interviews are `facecam: null` with `focus_x` on the person speaking. Then fill in `<run>/layout.json` for each key:
    - `"facecam": [x, y, w, h]` as fractions of the image (0 to 1) around the streamer's face cam box, tight to the box edges, or `null` if there's no face cam (full-screen camera or gameplay only).
    - `"focus_x"`: where the action is horizontally in the gameplay (0 left, 0.5 center, 1 right). For a full-screen camera with no gameplay, set it to the person's horizontal center and keep `facecam` null.
    Example: a face cam in the bottom-right corner of a 1920x1080 frame at pixels (1450, 700) to (1900, 1060) is `[0.755, 0.648, 0.234, 0.333]`.
 3. `"$PY" cut.py render --run "<run folder>"` builds every clip: face cam on top (40%), gameplay underneath, the hook in a yellow box for the first 3 seconds, word-by-word captions from a fresh Whisper pass on the clip itself, audio normalized to Shorts loudness, and saves to `<run>/clips/`. Then it checks each clip for length, a black face cam area, black gameplay and missing captions.
 4. If a check fails, or the user wants a change, edit `<run>/layout.json` or `<run>/picks.json` (the copy inside the run folder, not `WORK/picks.json`) and re-render just that clip: `"$PY" cut.py render --run "<run>" --only 03`. A new hook, title or caption only needs the re-render. New times need `"$PY" cut.py download --run "<run>" --only 03` first, then a fresh look at its frames, then the re-render. If a clip prints `!! render failed`, the other clips are still fine; fix that one clip's layout or times and re-render it alone.
-5. Look at a frame from the start and the middle of each finished clip yourself (`~/.gta6-clipper/bin/ffmpeg -ss 2 -i clip.mp4 -frames:v 1 check.jpg`, then again at the midpoint) before you say it's done. If the face is cut off, the crop is wrong or the captions read wrong, fix it and re-render.
+5. Look at a frame from the start and the middle of each finished clip yourself (`~/.clipper/bin/ffmpeg -ss 2 -i clip.mp4 -frames:v 1 check.jpg`, then again at the midpoint) before you say it's done. If the face is cut off, the crop is wrong or the captions read wrong, fix it and re-render.
 
 ## 5. Post
 
@@ -101,7 +103,7 @@ Before writing the file, show the user a short table (time, streamer, type, scor
 Tell the user, every time, in one or two lines:
 - Watch each clip before posting and cut anything that starts slow.
 - Add something of their own (their hook, a reaction, a take). Channels of raw reposted clips get turned down for monetization; "the clips are the reach, you are the channel".
-- Credit the streamer, follow the clipping campaign's rules, and don't post the same clip twice on one account.
+- Credit the streamer or creator, follow the clipping campaign's rules, and don't post the same clip twice on one account.
 
 There is no auto-upload in this skill. Posting stays with the user so nothing goes out unreviewed.
 
@@ -116,7 +118,7 @@ Then update `WORK/preferences.md` with 2 to 5 concrete rules from the data ("fre
 ## Troubleshooting
 
 - **"This stream is still live"**: analyze.py stops on live streams and on YouTube recordings that are still processing. Tell the user to come back once the stream has ended and the recording is up, or pick a different stream.
-- **"Sign in to confirm you're not a bot" or 403 from YouTube:** set the browser to borrow cookies from (`export GTA6_COOKIES_BROWSER=chrome`, or safari/firefox) and run again. Also run setup again to update yt-dlp, which fixes most YouTube breakages.
+- **"Sign in to confirm you're not a bot" or 403 from YouTube:** set the browser to borrow cookies from (`export CLIPPER_COOKIES_BROWSER=chrome`, or safari/firefox) and run again. Also run setup again to update yt-dlp, which fixes most YouTube breakages.
 - **No chat speed:** only YouTube VODs of live streams have chat replay. Loudness and most-replayed still work.
 - **Most-replayed missing:** new or low-view videos don't have the graph yet. Loudness carries it.
 - **A clip has no captions:** there was no clear speech (a pure scream). That's fine; the hook still shows.

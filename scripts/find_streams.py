@@ -1,8 +1,9 @@
-"""Find today's biggest GTA 6 streams on YouTube.
+"""Find the biggest long streams or videos on YouTube for any topic.
 
 Usage:
-  python find_streams.py                       # GTA 6 streams from this week, longest + most viewed
-  python find_streams.py --query "GTA 6 xQc" --when today --max 5
+  python find_streams.py --query "GTA 6 stream"            # this week's biggest GTA 6 streams
+  python find_streams.py --query "Kai Cenat stream" --when today --max 5
+  python find_streams.py --query "podcast full episode" --min-minutes 30
 """
 import argparse
 import urllib.parse
@@ -17,7 +18,7 @@ WHEN = {"hour": "EgIIAQ%3D%3D", "today": "EgIIAg%3D%3D", "week": "EgIIAw%3D%3D",
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--query", default="GTA 6 stream")
+    ap.add_argument("--query", required=True, help='what to search for, e.g. "GTA 6 stream", "Minecraft stream", "podcast full episode"')
     ap.add_argument("--when", choices=list(WHEN), default="week")
     ap.add_argument("--min-minutes", type=int, default=45, help="skip anything shorter (we want full streams)")
     ap.add_argument("--max", type=int, default=8)
@@ -59,7 +60,7 @@ def main():
     if not rows:
         print("No matching streams found. Try --when month or a different --query.")
         return
-    print(f"Top {len(rows)} GTA 6 streams ({a.when}):")
+    print(f"Top {len(rows)} results for \"{a.query}\" ({a.when}):")
     for i, r in enumerate(rows, 1):
         tag = "LIVE" if r["live"] else hms(r["duration"])
         print(f"{i}. [{tag}] {r['views']:,} views | {r['channel']} | {r['title']}\n   {r['url']}")

@@ -7,7 +7,7 @@ curve, then transcribe the hottest windows with Whisper on your own computer.
 Usage:
   python analyze.py <stream url> [--top 25] [--model small] [--full] [--no-chat]
 
-Output (in ~/GTA6 Clipper/streams/<id>/):
+Output (in ~/Clipper/streams/<id>/):
   for_claude.md    every candidate window with its transcript and hype score (Claude reads this)
   candidates.json  the same, as data
   hype.png         the hype curve picture
@@ -304,7 +304,7 @@ def main():
             for s in c["segments"]:
                 lines.append(f"[{hms(s['t'])} | hype {s['hype']}] {s['text']}")
             if not c["segments"]:
-                lines.append("(no speech: could be a pure gameplay or scream moment)")
+                lines.append("(no speech: could be a pure gameplay, laugh or scream moment)")
             lines.append("")
     (d / "for_claude.md").write_text("\n".join(lines), encoding="utf-8")
 

@@ -1,4 +1,4 @@
-"""Shared helpers for the GTA 6 Clipper scripts."""
+"""Shared helpers for the Clipper scripts."""
 import json
 import os
 import pathlib
@@ -10,12 +10,12 @@ import sys
 # Keep Whisper's engine (ctranslate2) from printing its own tips and warnings.
 os.environ.setdefault("CT2_VERBOSE", "-1")
 
-HOME_DIR = pathlib.Path.home() / ".gta6-clipper"
-WORK = pathlib.Path(os.environ.get("GTA6_CLIPPER_DIR", pathlib.Path.home() / "GTA6 Clipper"))
+HOME_DIR = pathlib.Path.home() / ".clipper"
+WORK = pathlib.Path(os.environ.get("CLIPPER_DIR") or os.environ.get("GTA6_CLIPPER_DIR") or (pathlib.Path.home() / "Clipper"))
 
 # Make deno (YouTube JS challenges) and uv visible to yt-dlp.
 os.environ["PATH"] = os.pathsep.join(
-    # ~/.gta6-clipper/bin holds our ffmpeg; yt-dlp's partial (clip-only) downloads look for it on PATH
+    # ~/.clipper/bin holds our ffmpeg; yt-dlp's partial (clip-only) downloads look for it on PATH
     [str(HOME_DIR / "bin"), str(HOME_DIR / "venv" / "bin"), str(pathlib.Path.home() / ".deno" / "bin"), str(pathlib.Path.home() / ".local" / "bin"),
      os.environ.get("PATH", "")]
 )
@@ -62,7 +62,7 @@ def ydl_opts(**extra):
         "logger": _QuietLogger(),
         "ffmpeg_location": FFMPEG,
     }
-    browser = os.environ.get("GTA6_COOKIES_BROWSER")  # e.g. chrome, safari, firefox (only if YouTube asks you to sign in)
+    browser = os.environ.get("CLIPPER_COOKIES_BROWSER") or os.environ.get("GTA6_COOKIES_BROWSER")  # e.g. chrome, safari, firefox (only if YouTube asks you to sign in)
     if browser:
         opts["cookiesfrombrowser"] = (browser,)
     opts.update(extra)
@@ -138,11 +138,11 @@ def explain_download_error(e):
     low = msg.lower()
     if "confirm your age" in low or "age-restricted" in low:
         return ("This video is age-restricted, so YouTube wants you signed in. Run "
-                "`export GTA6_COOKIES_BROWSER=chrome` (or safari/firefox, whichever browser you're logged into "
+                "`export CLIPPER_COOKIES_BROWSER=chrome` (or safari/firefox, whichever browser you're logged into "
                 "YouTube with) and try again, or pick a different stream.")
     if "not a bot" in low or "sign in" in low or "http error 403" in low:
         return ("YouTube is blocking the download. Run setup again to update the downloader, and if it still "
-                "fails, run `export GTA6_COOKIES_BROWSER=chrome` (or safari/firefox) and try again.")
+                "fails, run `export CLIPPER_COOKIES_BROWSER=chrome` (or safari/firefox) and try again.")
     if "private video" in low or "members-only" in low or "join this channel" in low:
         return "This video is private or members-only, so it can't be clipped. Pick a different stream."
     if "unavailable" in low or "removed" in low or "does not exist" in low:

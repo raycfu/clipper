@@ -2,14 +2,14 @@ r"""Cut Claude's picks into finished vertical clips.
 
 Two steps, because Claude looks at a frame of each clip in between:
 
-  python cut.py download --picks ~/GTA6\ Clipper/picks.json
+  python cut.py download --picks ~/Clipper/picks.json
       downloads ONLY the minutes each pick needs, saves three frames and a contact
       sheet per clip, and creates a run folder with layout.json for Claude to fill in
 
-  python cut.py download --run "~/GTA6 Clipper/runs/<run>" --only 03
+  python cut.py download --run "~/Clipper/runs/<run>" --only 03
       re-downloads one pick after you change its start/end in that run's picks.json
 
-  python cut.py render --run "~/GTA6 Clipper/runs/<run>"
+  python cut.py render --run "~/Clipper/runs/<run>"
       builds each 1080x1920 clip: face cam on top, gameplay underneath,
       a hook for the first 3 seconds, word-by-word captions, Shorts-level audio,
       then checks every clip (length, black face cam, file written)

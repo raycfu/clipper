@@ -1,6 +1,6 @@
 """Build one page with every finished clip, its caption and hashtags, and copy buttons.
 
-Usage: python gallery.py --run "~/GTA6 Clipper/runs/<run>" [--no-open]
+Usage: python gallery.py --run "~/Clipper/runs/<run>" [--no-open]
 """
 import argparse
 import html
@@ -55,7 +55,7 @@ def main():
 </div>""")
 
     page = f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>GTA 6 Clips</title><style>
+<title>Your Clips</title><style>
 :root{{--bg:#0e0e12;--card:#18181f;--fg:#f2f2f5;--mut:#9a9aa8;--acc:#ffd60a}}
 body{{margin:0;background:var(--bg);color:var(--fg);font:15px/1.45 -apple-system,Segoe UI,Roboto,sans-serif;padding:24px 16px}}
 h1{{margin:0 0 4px}} .sub{{color:var(--mut);margin:0 0 24px}}
@@ -72,7 +72,7 @@ textarea{{width:100%;box-sizing:border-box;height:92px;background:#101016;color:
 button,a{{background:#2a2a35;color:var(--fg);border:0;border-radius:10px;padding:8px 12px;font:inherit;cursor:pointer;text-decoration:none}}
 .src{{color:var(--mut);font-size:13px}} .src a{{background:none;padding:0;color:var(--acc)}}
 </style></head><body>
-<h1>GTA 6 Clips</h1><p class="sub">{len(clips)} clips, best first. Watch each one, cut anything that starts slow, then copy and post.</p>
+<h1>Your Clips</h1><p class="sub">{len(clips)} clips, best first. Watch each one, cut anything that starts slow, then copy and post.</p>
 <div class="grid">{''.join(cards)}</div>
 <script>function cp(b,t){{navigator.clipboard.writeText(t).then(()=>{{const o=b.textContent;b.textContent='Copied';setTimeout(()=>b.textContent=o,1200)}})}}</script>
 </body></html>"""

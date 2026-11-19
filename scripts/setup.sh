@@ -1,10 +1,10 @@
 #!/bin/bash
-# GTA 6 Clipper setup.
-# Installs everything into ~/.gta6-clipper so nothing else on your computer changes.
+# Clipper setup.
+# Installs everything into ~/.clipper so nothing else on your computer changes.
 # Safe to run again: it skips anything that's already installed.
 set -e
 command -v curl >/dev/null 2>&1 || { echo "curl is required. Install it and run this again."; exit 1; }
-HOME_DIR="$HOME/.gta6-clipper"
+HOME_DIR="$HOME/.clipper"
 mkdir -p "$HOME_DIR/bin"
 export PATH="$HOME/.local/bin:$HOME/.deno/bin:$PATH"
 
@@ -58,4 +58,4 @@ echo "==> Self-test"
 "$HOME_DIR/bin/ffmpeg" -hide_banner -version | head -1 | sed 's/^/    /'
 if command -v deno >/dev/null 2>&1 || [ -x "$HOME_DIR/venv/bin/deno" ] || [ -x "$HOME/.deno/bin/deno" ]; then echo "    deno ok"; else echo "    WARNING: deno missing, YouTube downloads may fail"; fi
 if "$HOME_DIR/bin/ffmpeg" -hide_banner -encoders 2>/dev/null | grep -q libx264; then echo "    h264 encoder ok"; else echo "    libx264 missing, will use the built-in encoder"; fi
-echo "READY: GTA 6 Clipper is set up."
+echo "READY: Clipper is set up."
